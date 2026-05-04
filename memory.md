@@ -25,7 +25,8 @@ A Python-based CLI application to search for datasets across multiple online sou
 - [x] HuggingFace search implementation.
 - [x] OpenML search implementation.
 - [x] CLI Entry point with Rich UI.
-- [/] Installation of dependencies (In Progress).
+- [x] Installation of dependencies.
+- [x] Pushed to GitHub (https://github.com/bondeto/searching-dataset.git).
 - [ ] Testing and validation.
 
 ## Next Steps

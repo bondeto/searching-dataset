@@ -3,6 +3,7 @@ Main entry point for Dataset Searcher CLI.
 """
 import asyncio
 import typer
+import sys
 from typing import List, Optional
 from rich.console import Console
 from rich.table import Table
@@ -53,8 +54,8 @@ def display_results(results: List[Dataset], query: str):
 
     for ds in results:
         stats = []
-        if ds.downloads is not None: stats.append(f"📥 {ds.downloads}")
-        if ds.votes is not None: stats.append(f"👍 {ds.votes}")
+        if ds.downloads is not None: stats.append(f"D: {ds.downloads}")
+        if ds.votes is not None: stats.append(f"V: {ds.votes}")
         
         table.add_row(
             ds.source.upper(),
@@ -94,4 +95,8 @@ def search(
     display_results(results, query)
 
 if __name__ == "__main__":
+    if sys.platform == "win32":
+        # Force UTF-8 on Windows to prevent UnicodeEncodeError
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     app()
