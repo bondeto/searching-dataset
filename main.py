@@ -5,6 +5,7 @@ import asyncio
 import typer
 import sys
 import pandas as pd
+from fpdf import FPDF
 from datetime import datetime
 from typing import List, Optional
 from rich.console import Console
@@ -99,11 +100,50 @@ def export_to_excel(results: List[Dataset], query: str):
     df.to_excel(filepath, index=False)
     return filepath
 
+def export_to_pdf(results: List[Dataset], query: str):
+    if not results:
+        return None
+    
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, f"Dataset Search Results: {query}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.set_font("helvetica", "I", 10)
+    pdf.cell(0, 10, f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.ln(10)
+    
+    for i, ds in enumerate(results, 1):
+        pdf.set_font("helvetica", "B", 12)
+        pdf.cell(0, 10, f"{i}. {ds.title} ({ds.source.upper()})", new_x="LMARGIN", new_y="NEXT")
+        
+        pdf.set_font("helvetica", "", 10)
+        # Description might be long, use multi_cell
+        pdf.multi_cell(0, 5, f"Description: {ds.description}")
+        
+        pdf.cell(0, 5, f"Size: {ds.size} | Formats: {ds.format_formats()}", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(0, 5, f"Stats: Downloads: {ds.downloads or 0} | Votes: {ds.votes or 0}", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_text_color(0, 0, 255)
+        pdf.cell(0, 5, f"URL: {ds.url}", new_x="LMARGIN", new_y="NEXT", link=ds.url)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(5)
+        
+        if pdf.get_y() > 250: # Check for page break
+            pdf.add_page()
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"datasets_{query.replace(' ', '_')}_{timestamp}.pdf"
+    
+    from config import EXPORT_DIR
+    filepath = EXPORT_DIR / filename
+    pdf.output(str(filepath))
+    return filepath
+
 @app.command()
 def search(
     query: str = typer.Argument(..., help="The search query"),
     limit: int = typer.Option(10, "--limit", "-l", help="Max results per source"),
     excel: bool = typer.Option(False, "--excel", "-e", help="Export results to Excel file"),
+    pdf: bool = typer.Option(False, "--pdf", "-p", help="Export results to PDF file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output")
 ):
     """
@@ -130,7 +170,12 @@ def search(
     if excel and results:
         filepath = export_to_excel(results, query)
         if filepath:
-            console.print(f"\n[bold green]✅ Results exported to:[/bold green] [blue]{filepath}[/blue]")
+            console.print(f"\n[bold green]✅ Results exported to Excel:[/bold green] [blue]{filepath}[/blue]")
+
+    if pdf and results:
+        filepath = export_to_pdf(results, query)
+        if filepath:
+            console.print(f"[bold green]✅ Results exported to PDF:[/bold green] [blue]{filepath}[/blue]")
 
 if __name__ == "__main__":
     if sys.platform == "win32":
