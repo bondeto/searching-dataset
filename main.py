@@ -4,6 +4,8 @@ Main entry point for Dataset Searcher CLI.
 import asyncio
 import typer
 import sys
+import pandas as pd
+from datetime import datetime
 from typing import List, Optional
 from rich.console import Console
 from rich.table import Table
@@ -67,10 +69,41 @@ def display_results(results: List[Dataset], query: str):
 
     console.print(table)
 
+def export_to_excel(results: List[Dataset], query: str):
+    if not results:
+        return None
+    
+    data = []
+    for ds in results:
+        data.append({
+            "Source": ds.source.upper(),
+            "Title": ds.title,
+            "Description": ds.description,
+            "Size": ds.size,
+            "Formats": ds.format_formats(),
+            "Downloads": ds.downloads,
+            "Votes": ds.votes,
+            "Author": ds.author,
+            "Last Updated": ds.last_updated,
+            "URL": ds.url
+        })
+    
+    df = pd.DataFrame(data)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"datasets_{query.replace(' ', '_')}_{timestamp}.xlsx"
+    
+    # Ensure export directory exists
+    from config import EXPORT_DIR
+    filepath = EXPORT_DIR / filename
+    
+    df.to_excel(filepath, index=False)
+    return filepath
+
 @app.command()
 def search(
     query: str = typer.Argument(..., help="The search query"),
     limit: int = typer.Option(10, "--limit", "-l", help="Max results per source"),
+    excel: bool = typer.Option(False, "--excel", "-e", help="Export results to Excel file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose output")
 ):
     """
@@ -93,6 +126,11 @@ def search(
 
     results = asyncio.run(run())
     display_results(results, query)
+    
+    if excel and results:
+        filepath = export_to_excel(results, query)
+        if filepath:
+            console.print(f"\n[bold green]✅ Results exported to:[/bold green] [blue]{filepath}[/blue]")
 
 if __name__ == "__main__":
     if sys.platform == "win32":

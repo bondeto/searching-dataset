@@ -6,6 +6,7 @@ A Python-based CLI application to search for datasets across multiple online sou
 ## Features
 - **Multi-source Search**: Simultaneously queries Kaggle (API), HuggingFace (API), and OpenML (API).
 - **Parallel Execution**: Uses `asyncio` to perform searches concurrently for maximum speed.
+- **Excel Export**: Save results to `.xlsx` files using `pandas` (use `--excel` or `-e`).
 - **Rich Terminal UI**: Uses `rich` for beautiful tables, progress spinners, and colored output.
 - **Extensible Architecture**: Clean separation between search providers and the main application logic.
 
@@ -27,6 +28,7 @@ A Python-based CLI application to search for datasets across multiple online sou
 - [x] CLI Entry point with Rich UI.
 - [x] Installation of dependencies.
 - [x] Pushed to GitHub (https://github.com/bondeto/searching-dataset.git).
+- [x] Excel export functionality.
 - [ ] Testing and validation.
 
 ## Next Steps
